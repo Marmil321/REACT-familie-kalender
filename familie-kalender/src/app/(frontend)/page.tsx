@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './main/styles/main.css'
 
 interface Event {
@@ -8,67 +8,50 @@ interface Event {
   title: string
   time: string
   attendees: string
-  type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'zzZZ' | 'annet'
+  type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
 }
 
 export default function FamilyCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Dummy events data
-  const dummyEvents: Event[] = [
-    {
-      id: 1,
-      title: 'Sove',
-      time: '20:00',
-      attendees: 'Noomi',
-      type: 'zzZZ',
-      date: new Date()
-    },
-    {
-      id: 2,
-      title: 'Slutte å mase',
-      time: '7:00 PM',
-      attendees: 'Mamma',
-      type: 'annet',
-      date: new Date()
-    },
-    {
-      id: 3,
-      title: 'Dentist Appointment',
-      time: '10:30 AM',
-      attendees: 'Jake',
-      type: 'appointment',
-      date: new Date(Date.now() + 86400000) // Tomorrow
-    },
-    {
-      id: 4,
-      title: 'Piano Lesson',
-      time: '4:00 PM',
-      attendees: 'Emma',
-      type: 'appointment',
-      date: new Date(Date.now() + 86400000) // Tomorrow
-    },
-    {
-      id: 5,
-      title: 'Family Movie Night',
-      time: '7:30 PM',
-      attendees: 'Whole Family',
-      type: 'family',
-      date: new Date(Date.now() + 172800000) // Day after tomorrow
-    },
-    {
-      id: 6,
-      title: 'School Science Fair',
-      time: '6:00 PM',
-      attendees: 'Jake & Parents',
-      type: 'school',
-      date: new Date(Date.now() + 259200000) // 3 days from now
+  // Hent hendelser fra API
+  const fetchEvents = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/events')
+      const result = await response.json()
+
+      if (result.success) {
+        // Konverter datostrenger til Date-objekter
+        const eventsWithDates = result.data.map((event: Event) => ({
+          ...event,
+          date: new Date(event.date)
+        }))
+        setEvents(eventsWithDates)
+      } else {
+        setError(result.error || 'Kunne ikke hente hendelser')
+      }
+    } catch (err) {
+      setError('Nettverksfeil ved henting av hendelser')
+      console.error('Feil ved henting av hendelser:', err)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
+
+  // Hent hendelser når komponenten laster
+  useEffect(() => {
+    fetchEvents()
+  }, [])
 
   // Get today's events
-  const todaysEvents = dummyEvents.filter(event => {
+  const todaysEvents = events.filter(event => {
     const today = new Date()
     return event.date.toDateString() === today.toDateString()
   })
@@ -80,14 +63,13 @@ export default function FamilyCalendarPage() {
       appointment: 'event-purple',
       family: 'event-orange',
       work: 'event-red',
-      zzZZ: 'event-blue',
       annet: 'event-green'
     }
     return typeClasses[type]
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('nb-NO', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -100,7 +82,7 @@ export default function FamilyCalendarPage() {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
+    //const lastDay = new Date(year, month + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
 
@@ -122,7 +104,7 @@ export default function FamilyCalendarPage() {
       <div className="calendar-wrapper">
         <header className="calendar-header">
           <h1 className="calendar-title">
-            Family Calendar
+            Familiekalender
           </h1>
           <p className="calendar-date">
             {formatDate(currentDate)}
@@ -133,10 +115,23 @@ export default function FamilyCalendarPage() {
           {/* Today's Events */}
           <div className="events-card">
             <h2 className="card-title">
-              Todays Events
+              Dagens hendelser
             </h2>
             <div className="events-list">
-              {todaysEvents.length > 0 ? (
+              {loading ? (
+                <p className="event-details">Laster hendelser...</p>
+              ) : error ? (
+                <div>
+                  <p className="event-details" style={{ color: 'red' }}>{error}</p>
+                  <button
+                    onClick={fetchEvents}
+                    className="nav-button nav-button-today"
+                    style={{ marginTop: '0.5rem' }}
+                  >
+                    Prøv igjen
+                  </button>
+                </div>
+              ) : todaysEvents.length > 0 ? (
                 todaysEvents.map(event => (
                   <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
                     <p className="event-title">{event.title}</p>
@@ -144,7 +139,7 @@ export default function FamilyCalendarPage() {
                   </div>
                 ))
               ) : (
-                <p className="event-details">No events scheduled for today</p>
+                <p className="event-details">Ingen hendelser planlagt for i dag</p>
               )}
             </div>
           </div>
@@ -153,7 +148,7 @@ export default function FamilyCalendarPage() {
           <div className="calendar-card">
             <div className="calendar-nav">
               <h2 className="card-title">
-                {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {currentDate.toLocaleDateString('nb-NO', { month: 'long', year: 'numeric' })}
               </h2>
               <div className="nav-buttons">
                 <button
@@ -166,7 +161,7 @@ export default function FamilyCalendarPage() {
                   onClick={() => setCurrentDate(new Date())}
                   className="nav-button nav-button-today"
                 >
-                  Today
+                  I dag
                 </button>
                 <button
                   onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
@@ -179,7 +174,7 @@ export default function FamilyCalendarPage() {
 
             {/* Calendar header */}
             <div className="calendar-header-row">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              {['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'].map(day => (
                 <div key={day} className="calendar-day-header">
                   {day}
                 </div>
@@ -190,7 +185,7 @@ export default function FamilyCalendarPage() {
               {calendarDates.map((date, i) => {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
                 const isToday = date.toDateString() === new Date().toDateString()
-                const hasEvents = dummyEvents.some(event =>
+                const hasEvents = events.some(event =>
                   event.date.toDateString() === date.toDateString()
                 )
 
@@ -211,13 +206,13 @@ export default function FamilyCalendarPage() {
         {/* Quick Actions */}
         <div className="quick-actions">
           <button className="action-button button-blue">
-            Add Event
+            Legg til hendelse
           </button>
           <button className="action-button button-green">
-            View All Events
+            Se alle hendelser
           </button>
           <button className="action-button button-purple">
-            Family Settings
+            Familieinnstillinger
           </button>
         </div>
       </div>
