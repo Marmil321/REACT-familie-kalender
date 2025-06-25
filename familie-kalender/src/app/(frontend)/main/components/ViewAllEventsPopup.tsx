@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface Event {
   id: number
   title: string
   time: string
-  attendees: string
+  attendees: { name: string }[]
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
 }
@@ -38,6 +38,40 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
     { value: 'annet', label: 'Annet' }
   ]
 
+  // Family member labels
+  const familyMemberLabels: Record<string, string> = {
+    marcus: 'Marcus',
+    marita: 'Marita',
+    meline: 'Meline',
+    lucas: 'Lucas',
+    lars: 'Lars',
+    noomi: 'Noomi',
+    bailey: 'Bailey'
+  }
+
+  // Helper function to format attendees display
+  const formatAttendees = (attendees: { name: string | undefined}[]) => {
+    if (!attendees || attendees.length === 0) {
+      return 'Ingen deltakere'
+    }
+
+    const names = attendees.map(attendee =>
+      attendee.name && familyMemberLabels[attendee.name]
+        ? familyMemberLabels[attendee.name]
+        : attendee.name || 'Ukjent'
+    )
+
+    if (names.length === 1) {
+      return names[0]
+    } else if (names.length === 2) {
+      return `${names[0]} og ${names[1]}`
+    } else if (names.length <= 3) {
+      return `${names.slice(0, -1).join(', ')} og ${names[names.length - 1]}`
+    } else {
+      return `${names.slice(0, 2).join(', ')} og ${names.length - 2} andre`
+    }
+  }
+
   const getEventTypeClass = (type: Event['type']) => {
     const typeClasses: Record<Event['type'], string> = {
       sports: 'event-blue',
@@ -62,7 +96,8 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
     return typeLabels[type]
   }
 
-  const fetchAllEvents = async () => {
+
+  const fetchAllEvents = useCallback(async () => {
     if (!isOpen) return
 
     try {
@@ -91,7 +126,9 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
       if (result.success) {
         const eventsWithDates = result.data.map((event: Event) => ({
           ...event,
-          date: new Date(event.date)
+          date: new Date(event.date),
+          // Ensure attendees is always an array
+          attendees: Array.isArray(event.attendees) ? event.attendees : []
         }))
         setEvents(eventsWithDates)
       } else {
@@ -103,15 +140,16 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
     } finally {
       setLoading(false)
     }
-  }
+  }, [isOpen, filterType, filterDateFrom, filterDateTo])
 
   // Filter events based on search term
   const filteredEvents = events.filter(event => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
+      const attendeesText = (formatAttendees(event.attendees ?? []) || '').toLowerCase()
       return (
         event.title.toLowerCase().includes(searchLower) ||
-        event.attendees.toLowerCase().includes(searchLower)
+        attendeesText.includes(searchLower)
       )
     }
     return true
@@ -181,7 +219,7 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
 
   useEffect(() => {
     fetchAllEvents()
-  }, [isOpen, filterType, filterDateFrom, filterDateTo])
+  }, [isOpen, filterType, filterDateFrom, filterDateTo, fetchAllEvents])
 
   if (!isOpen) return null
 
@@ -317,9 +355,7 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
 
                             <div className="event-details">
                               <span className="event-time">🕐 {event.time}</span>
-                              {event.attendees && (
-                                <span className="event-attendees">👥 {event.attendees}</span>
-                              )}
+                              <span className="event-attendees">👥 {formatAttendees(event.attendees)}</span>
                               <span className="event-date">📅 {formatShortDate(event.date)}</span>
                             </div>
                           </div>

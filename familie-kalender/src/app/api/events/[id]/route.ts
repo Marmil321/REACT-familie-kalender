@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+type Attendee = {
+  name: string
+}
 
 interface Params {
   params: {
@@ -86,17 +89,60 @@ export async function PUT(request: NextRequest, { params }: Params) {
         {
           success: false,
           error: 'Manglende påkrevde felter',
-          required: ['title', 'date', 'time', 'type']
+          required: ['title', 'date', 'time', 'type'],
+          received: Object.keys(body)
         },
         { status: 400 }
       )
+    }
+
+    // Valider attendees struktur hvis den finnes
+    if (body.attendees) {
+      if (!Array.isArray(body.attendees)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Deltakere må være en array',
+            details: 'attendees må være en array av objekter med name-felter'
+          },
+          { status: 400 }
+        )
+      }
+
+      // Sjekk at alle attendees har name-felt
+      const validAttendees = body.attendees.every((attendee: Attendee) =>
+        attendee && typeof attendee === 'object' && typeof attendee.name === 'string'
+      )
+
+      if (!validAttendees) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Ugyldig deltaker-struktur',
+            details: 'Hver deltaker må ha et name-felt av type string'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Forbered data for oppdatering
+    const updateData = {
+      title: body.title,
+      date: body.date,
+      time: body.time,
+      type: body.type,
+      attendees: body.attendees || [], // Standard til tom array hvis ikke oppgitt
+      description: body.description || undefined,
+      location: body.location || undefined,
+      reminder: body.reminder || false
     }
 
     // Oppdater hendelsen
     const updatedEvent = await payload.update({
       collection: 'events',
       id: parseInt(eventId),
-      data: body
+      data: updateData
     })
 
     return NextResponse.json({

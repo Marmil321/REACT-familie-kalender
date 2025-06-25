@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+type Attendee = {
+  name: string
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,7 +77,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Eksempel på POST-funksjon for å opprette nye hendelser
 export async function POST(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
@@ -86,16 +88,59 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Manglende påkrevde felter',
-          required: ['title', 'date', 'time', 'type']
+          required: ['title', 'date', 'time', 'type'],
+          received: Object.keys(body)
         },
         { status: 400 }
       )
     }
 
+    // Valider attendees struktur hvis den finnes
+    if (body.attendees) {
+      if (!Array.isArray(body.attendees)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Deltakere må være en array',
+            details: 'attendees må være en array av objekter med name-felter'
+          },
+          { status: 400 }
+        )
+      }
+
+      // Sjekk at alle attendees har name-felt
+      const validAttendees = body.attendees.every((attendee: Attendee) =>
+        attendee && typeof attendee === 'object' && typeof attendee.name === 'string'
+      )
+
+      if (!validAttendees) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Ugyldig deltaker-struktur',
+            details: 'Hver deltaker må ha et name-felt av type string'
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Forbered data for Payload CMS
+    const eventData = {
+      title: body.title,
+      date: body.date,
+      time: body.time,
+      type: body.type,
+      attendees: body.attendees || [], // Standard til tom array hvis ikke oppgitt
+      description: body.description || undefined,
+      location: body.location || undefined,
+      reminder: body.reminder || false
+    }
+
     // Opprett ny hendelse
     const newEvent = await payload.create({
       collection: 'events',
-      data: body
+      data: eventData
     })
 
     return NextResponse.json({

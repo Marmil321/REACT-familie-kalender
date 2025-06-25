@@ -9,7 +9,7 @@ interface Event {
   id: number
   title: string
   time: string
-  attendees: string
+  attendees: { name: string }[]
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
 }
@@ -25,6 +25,36 @@ export default function FamilyCalendarPage() {
   const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
 
+  // Family member labels
+  const familyMemberLabels: Record<string, string> = {
+    marcus: 'Marcus',
+    marita: 'Marita',
+    meline: 'Meline',
+    lucas: 'Lucas',
+    lars: 'Lars',
+    noomi: 'Noomi',
+    bailey: 'Bailey'
+  }
+
+  // Helper function to format attendees display
+  const formatAttendees = (attendees: { name: string }[]) => {
+    if (!attendees || attendees.length === 0) {
+      return 'Ingen deltakere'
+    }
+
+    const names = attendees.map(attendee => familyMemberLabels[attendee.name] || attendee.name)
+
+    if (names.length === 1) {
+      return names[0]
+    } else if (names.length === 2) {
+      return `${names[0]} og ${names[1]}`
+    } else if (names.length <= 3) {
+      return `${names.slice(0, -1).join(', ')} og ${names[names.length - 1]}`
+    } else {
+      return `${names.slice(0, 2).join(', ')} og ${names.length - 2} andre`
+    }
+  }
+
   // Hent hendelser fra API
   const fetchEvents = async () => {
     try {
@@ -38,7 +68,9 @@ export default function FamilyCalendarPage() {
         // Konverter datostrenger til Date-objekter
         const eventsWithDates = result.data.map((event: Event) => ({
           ...event,
-          date: new Date(event.date)
+          date: new Date(event.date),
+          // Ensure attendees is always an array
+          attendees: Array.isArray(event.attendees) ? event.attendees : []
         }))
         setEvents(eventsWithDates)
       } else {
@@ -173,7 +205,7 @@ export default function FamilyCalendarPage() {
                 todaysEvents.map(event => (
                   <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
                     <p className="event-title">{event.title}</p>
-                    <p className="event-details">{event.time} - {event.attendees}</p>
+                    <p className="event-details">{event.time} - {formatAttendees(event.attendees)}</p>
                   </div>
                 ))
               ) : (

@@ -47,12 +47,49 @@ export const Events: CollectionConfig = {
     },
     {
       name: 'attendees',
-      type: 'text',
+      type: 'array',
       label: 'Deltakere',
-      admin: {
-        description: 'Hvem som skal delta på hendelsen'
-      }
-    },
+      fields: [
+        {
+          name: 'name',
+          type: 'select',
+          label: 'Navn',
+          options: [ // marcus, marita, meline, lucas, lars, noomi, bailey
+            {
+              label: 'Marcus',
+              value: 'marcus'
+            },
+            {
+              label: 'Marita',
+              value: 'marita'
+            },
+            {
+              label: 'Meline',
+              value: 'meline'
+            },
+            {
+              label: 'Lucas',
+              value: 'lucas'
+            },
+            {
+              label: 'Lars',
+              value: 'lars'
+            },
+            {
+              label: 'Noomi',
+              value: 'noomi'
+            },
+            {
+              label: 'Bailey',
+              value: 'bailey'
+            }
+          ],
+          required: true,
+          admin: {
+            description: 'Velg deltakere for hendelsen'
+          }
+        }
+      ]},
     {
       name: 'type',
       type: 'select',

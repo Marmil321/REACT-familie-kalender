@@ -151,10 +151,15 @@ export interface Event {
    * Klokkeslett for hendelsen (f.eks. 14:30)
    */
   time: string;
-  /**
-   * Hvem som skal delta på hendelsen
-   */
-  attendees?: string | null;
+  attendees?:
+    | {
+        /**
+         * Velg deltakere for hendelsen
+         */
+        name: 'marcus' | 'marita' | 'meline' | 'lucas' | 'lars' | 'noomi' | 'bailey';
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Kategorisering av hendelsen
    */
@@ -255,7 +260,12 @@ export interface EventsSelect<T extends boolean = true> {
   title?: T;
   date?: T;
   time?: T;
-  attendees?: T;
+  attendees?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
   type?: T;
   description?: T;
   location?: T;

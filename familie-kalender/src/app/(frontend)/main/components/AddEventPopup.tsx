@@ -6,7 +6,7 @@ interface Event {
   id?: number
   title: string
   time: string
-  attendees: string
+  attendees: { name: string }[]
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
 }
@@ -23,7 +23,7 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
     title: '',
     date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     time: '',
-    attendees: '',
+    attendees: [] as { name: string }[],
     type: 'family' as Event['type']
   })
 
@@ -39,12 +39,55 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
     { value: 'annet', label: 'Annet' }
   ]
 
+  const familyMembers = [
+    { value: 'marcus', label: 'Marcus' },
+    { value: 'marita', label: 'Marita' },
+    { value: 'meline', label: 'Meline' },
+    { value: 'lucas', label: 'Lucas' },
+    { value: 'lars', label: 'Lars' },
+    { value: 'noomi', label: 'Noomi' },
+    { value: 'bailey', label: 'Bailey' }
+  ]
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleAttendeeToggle = (memberValue: string) => {
+    setFormData(prev => {
+      const isAlreadySelected = prev.attendees.some(attendee => attendee.name === memberValue)
+
+      if (isAlreadySelected) {
+        // Remove if already selected
+        return {
+          ...prev,
+          attendees: prev.attendees.filter(attendee => attendee.name !== memberValue)
+        }
+      } else {
+        // Add if not selected
+        return {
+          ...prev,
+          attendees: [...prev.attendees, { name: memberValue }]
+        }
+      }
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (formData.attendees.length === familyMembers.length) {
+      // Deselect all
+      setFormData(prev => ({ ...prev, attendees: [] }))
+    } else {
+      // Select all
+      setFormData(prev => ({
+        ...prev,
+        attendees: familyMembers.map(member => ({ name: member.value }))
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,7 +112,7 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
           title: '',
           date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           time: '',
-          attendees: '',
+          attendees: [],
           type: 'family'
         })
 
@@ -191,19 +234,41 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
           </div>
 
           <div className="form-group">
-            <label htmlFor="attendees" className="form-label">
-              Deltakere
-            </label>
-            <input
-              type="text"
-              id="attendees"
-              name="attendees"
-              value={formData.attendees}
-              onChange={handleInputChange}
-              className="form-input"
-              placeholder="Hvem skal delta?"
-              disabled={isSubmitting}
-            />
+            <div className="attendees-header">
+              <label className="form-label">Deltakere</label>
+              <button
+                type="button"
+                onClick={handleSelectAll}
+                className="select-all-btn"
+                disabled={isSubmitting}
+              >
+                {formData.attendees.length === familyMembers.length ? 'Fjern alle' : 'Velg alle'}
+              </button>
+            </div>
+            <div className="attendees-grid">
+              {familyMembers.map(member => {
+                const isSelected = formData.attendees.some(attendee => attendee.name === member.value)
+                return (
+                  <button
+                    key={member.value}
+                    type="button"
+                    onClick={() => handleAttendeeToggle(member.value)}
+                    className={`attendee-button ${isSelected ? 'selected' : ''}`}
+                    disabled={isSubmitting}
+                  >
+                    <span className="attendee-checkmark">
+                      {isSelected ? '✓' : ''}
+                    </span>
+                    {member.label}
+                  </button>
+                )
+              })}
+            </div>
+            {formData.attendees.length > 0 && (
+              <div className="selected-count">
+                {formData.attendees.length} deltaker{formData.attendees.length !== 1 ? 'e' : ''} valgt
+              </div>
+            )}
           </div>
 
           <div className="form-actions">
@@ -345,6 +410,99 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
           color: var(--color-text-secondary, #6e6e6e);
         }
 
+        .attendees-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .select-all-btn {
+          background: none;
+          border: 1px solid var(--color-border, #f2e6db);
+          color: var(--color-primary, #f28c8c);
+          border-radius: 6px;
+          padding: 0.25rem 0.75rem;
+          font-size: 0.8rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .select-all-btn:hover:not(:disabled) {
+          background-color: var(--color-primary, #f28c8c);
+          color: white;
+        }
+
+        .select-all-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .attendees-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .attendee-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.6rem 0.8rem;
+          border: 2px solid var(--color-border, #f2e6db);
+          border-radius: 8px;
+          background-color: white;
+          color: var(--color-text-primary, #4a4a4a);
+          cursor: pointer;
+          transition: all 0.2s ease;
+          font-size: 0.9rem;
+          font-family: 'Nunito', sans-serif;
+          justify-content: flex-start;
+        }
+
+        .attendee-button:hover:not(:disabled) {
+          border-color: var(--color-primary, #f28c8c);
+          background-color: rgba(242, 140, 140, 0.05);
+        }
+
+        .attendee-button.selected {
+          border-color: var(--color-primary, #f28c8c);
+          background-color: rgba(242, 140, 140, 0.1);
+          color: var(--color-primary, #f28c8c);
+        }
+
+        .attendee-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .attendee-checkmark {
+          width: 16px;
+          height: 16px;
+          border-radius: 3px;
+          border: 1px solid var(--color-border, #f2e6db);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.7rem;
+          font-weight: bold;
+          flex-shrink: 0;
+        }
+
+        .attendee-button.selected .attendee-checkmark {
+          background-color: var(--color-primary, #f28c8c);
+          border-color: var(--color-primary, #f28c8c);
+          color: white;
+        }
+
+        .selected-count {
+          font-size: 0.8rem;
+          color: var(--color-text-secondary, #6e6e6e);
+          text-align: center;
+          font-style: italic;
+        }
+
         .error-message {
           background-color: #fef2f2;
           border: 1px solid #fecaca;
@@ -419,6 +577,10 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
             grid-template-columns: 1fr;
           }
 
+          .attendees-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
           .form-actions {
             flex-direction: column-reverse;
           }
@@ -426,6 +588,12 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
           .button-primary,
           .button-secondary {
             width: 100%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .attendees-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
