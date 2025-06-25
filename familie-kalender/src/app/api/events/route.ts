@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getPayloadHMR } from '@payloadcms/next/utilities'
+import { getPayload } from 'payload'
 import config from '@/payload.config'
 
 export async function GET(request: NextRequest) {
   try {
     // Hent Payload-instansen
-    const payload = await getPayloadHMR({ config })
+    const payload = await getPayload({ config })
 
     // Hent URL-parametere for filtrering
     const { searchParams } = new URL(request.url)
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
 // Eksempel på POST-funksjon for å opprette nye hendelser
 export async function POST(request: NextRequest) {
   try {
-    const payload = await getPayloadHMR({ config })
+    const payload = await getPayload({ config })
     const body = await request.json()
 
     // Valider påkrevde felter
