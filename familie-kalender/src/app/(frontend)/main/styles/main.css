@@ -1,0 +1,271 @@
+/* family-calendar.css */
+
+.calendar-container {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  padding: 2rem;
+}
+
+.calendar-wrapper {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  margin-bottom: 2rem;
+}
+
+.calendar-title {
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.calendar-date {
+  color: #6b7280;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+@media (min-width: 1024px) {
+  .calendar-grid {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+.events-card,
+.calendar-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1f2937;
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.event-item {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid;
+}
+
+.event-blue {
+  background-color: #dbeafe;
+  border-left-color: #60a5fa;
+}
+
+.event-green {
+  background-color: #d1fae5;
+  border-left-color: #34d399;
+}
+
+.event-purple {
+  background-color: #e9d5ff;
+  border-left-color: #a855f7;
+}
+
+.event-orange {
+  background-color: #fed7aa;
+  border-left-color: #fb923c;
+}
+
+.event-red {
+  background-color: #fecaca;
+  border-left-color: #ef4444;
+}
+
+.event-title {
+  font-weight: 500;
+  margin: 0;
+}
+
+.event-details {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-button {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.nav-button-prev,
+.nav-button-next {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.nav-button-prev:hover,
+.nav-button-next:hover {
+  background-color: #d1d5db;
+}
+
+.nav-button-today {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.nav-button-today:hover {
+  background-color: #2563eb;
+}
+
+.calendar-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.calendar-day-header {
+  padding: 0.5rem;
+  text-align: center;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.calendar-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+}
+
+.calendar-date-cell {
+  height: 5rem;
+  border: 1px solid #e5e7eb;
+  padding: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.calendar-date-cell:hover {
+  background-color: #f9fafb;
+}
+
+.calendar-date-cell.other-month {
+  opacity: 0.4;
+}
+
+.calendar-date-cell.today {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.calendar-date-cell.today .date-number {
+  color: #1d4ed8;
+  font-weight: bold;
+}
+
+.date-number {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.event-dot {
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.25rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #3b82f6;
+  border-radius: 50%;
+}
+
+.quick-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.button-blue {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.button-blue:hover {
+  background-color: #2563eb;
+}
+
+.button-green {
+  background-color: #10b981;
+  color: white;
+}
+
+.button-green:hover {
+  background-color: #059669;
+}
+
+.button-purple {
+  background-color: #8b5cf6;
+  color: white;
+}
+
+.button-purple:hover {
+  background-color: #7c3aed;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 1rem;
+  }
+
+  .calendar-title {
+    font-size: 1.875rem;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+  }
+
+  .calendar-date-cell {
+    height: 3rem;
+  }
+}
