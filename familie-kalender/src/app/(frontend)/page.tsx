@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import './main/styles/main.css'
+import AddEventPopup from './main/components/AddEventPopup'
+import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
 
 interface Event {
   id: number
@@ -17,6 +19,11 @@ export default function FamilyCalendarPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Popup states
+  const [isAddPopupOpen, setIsAddPopupOpen] = useState(false)
+  const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
 
   // Hent hendelser fra API
   const fetchEvents = async () => {
@@ -82,7 +89,6 @@ export default function FamilyCalendarPage() {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const firstDay = new Date(year, month, 1)
-    //const lastDay = new Date(year, month + 1, 0)
     const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
 
@@ -98,6 +104,38 @@ export default function FamilyCalendarPage() {
   }
 
   const calendarDates = generateCalendarDates()
+
+  // Handle date click
+  const handleDateClick = (date: Date) => {
+    setSelectedDate(date)
+    setIsAddPopupOpen(true)
+  }
+
+  // Handle add event button click
+  const handleAddEventClick = () => {
+    setSelectedDate(new Date()) // Default to today
+    setIsAddPopupOpen(true)
+  }
+
+  // Handle view all events button click
+  const handleViewAllEventsClick = () => {
+    setIsViewAllPopupOpen(true)
+  }
+
+  // Handle popup close
+  const handleAddPopupClose = () => {
+    setIsAddPopupOpen(false)
+    setSelectedDate(undefined)
+  }
+
+  const handleViewAllPopupClose = () => {
+    setIsViewAllPopupOpen(false)
+  }
+
+  // Handle event added/modified
+  const handleEventChanged = () => {
+    fetchEvents() // Refresh events list
+  }
 
   return (
     <div className="calendar-container">
@@ -193,6 +231,7 @@ export default function FamilyCalendarPage() {
                   <div
                     key={i}
                     className={`calendar-date-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
+                    onClick={() => handleDateClick(date)}
                   >
                     <span className="date-number">{date.getDate()}</span>
                     {hasEvents && <div className="event-dot"></div>}
@@ -205,10 +244,16 @@ export default function FamilyCalendarPage() {
 
         {/* Quick Actions */}
         <div className="quick-actions">
-          <button className="action-button button-blue">
+          <button
+            className="action-button button-blue"
+            onClick={handleAddEventClick}
+          >
             Legg til hendelse
           </button>
-          <button className="action-button button-green">
+          <button
+            className="action-button button-green"
+            onClick={handleViewAllEventsClick}
+          >
             Se alle hendelser
           </button>
           <button className="action-button button-purple">
@@ -216,6 +261,20 @@ export default function FamilyCalendarPage() {
           </button>
         </div>
       </div>
+
+      {/* Popups */}
+      <AddEventPopup
+        isOpen={isAddPopupOpen}
+        onClose={handleAddPopupClose}
+        onEventAdded={handleEventChanged}
+        selectedDate={selectedDate}
+      />
+
+      <ViewAllEventsPopup
+        isOpen={isViewAllPopupOpen}
+        onClose={handleViewAllPopupClose}
+        onRefresh={handleEventChanged}
+      />
     </div>
   )
 }
