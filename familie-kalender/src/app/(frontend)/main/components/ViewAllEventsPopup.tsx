@@ -499,7 +499,7 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
         }
 
         .clear-filters-btn {
-          background-color: var(--color-secondary, #f2d4b7);
+          background-color: var(--color-warning, #f2d4b7);
           color: var(--color-text-primary, #4a4a4a);
           border: none;
           border-radius: 6px;
@@ -511,8 +511,7 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
         }
 
         .clear-filters-btn:hover {
-          background-color: var(--color-accent, #90c5a9);
-          color: white;
+          background-color: var(--color-text-secondary, #6e6e6e);
         }
 
         .events-content {
@@ -564,8 +563,8 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
         }
 
         .date-header {
-          background-color: var(--color-primary, #f28c8c);
-          color: white;
+          background-color: var(--color-accent, #f28c8c);
+          color: var(--color-text-primary, #ffffff);
           padding: 1rem 1.5rem;
           display: flex;
           justify-content: space-between;
@@ -573,7 +572,7 @@ export default function ViewAllEventsPopup({ isOpen, onClose, onRefresh }: ViewA
         }
 
         .date-header.past {
-          background-color: #9ca3af;
+          background-color: var(--color-secondary, #f2d4b7);
         }
 
         .date-title {
