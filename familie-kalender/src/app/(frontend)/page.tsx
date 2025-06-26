@@ -9,9 +9,43 @@ interface Event {
   id: number
   title: string
   time: string
-  attendees: { name: string }[]
+  attendees: string | Array<{id: string, name: string}> | object | null
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
+}
+
+// Helper function to safely render attendees
+const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
+  if (!attendees) return ''
+
+  // If it's a string, return as is
+  if (typeof attendees === 'string') return attendees
+
+  // If it's an array of objects with name property
+  if (Array.isArray(attendees)) {
+    return attendees
+      .map(attendee => {
+        if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
+          let name = attendee.name
+          //set first letter to uppercase
+          name = name.charAt(0).toUpperCase() + name.slice(1)
+          return name
+        }
+        return String(attendee)
+      })
+      .join(', ')
+  }
+
+  // If it's a single object with name property
+  if (typeof attendees === 'object' && attendees !== null) {
+    if ('name' in attendees && typeof attendees.name === 'string') {
+      return attendees.name
+    }
+    // Fallback for other object structures
+    return JSON.stringify(attendees)
+  }
+
+  return String(attendees)
 }
 
 export default function FamilyCalendarPage() {
@@ -24,36 +58,6 @@ export default function FamilyCalendarPage() {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false)
   const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
-
-  // Family member labels
-  const familyMemberLabels: Record<string, string> = {
-    marcus: 'Marcus',
-    marita: 'Marita',
-    meline: 'Meline',
-    lucas: 'Lucas',
-    lars: 'Lars',
-    noomi: 'Noomi',
-    bailey: 'Bailey'
-  }
-
-  // Helper function to format attendees display
-  const formatAttendees = (attendees: { name: string }[]) => {
-    if (!attendees || attendees.length === 0) {
-      return 'Ingen deltakere'
-    }
-
-    const names = attendees.map(attendee => familyMemberLabels[attendee.name] || attendee.name)
-
-    if (names.length === 1) {
-      return names[0]
-    } else if (names.length === 2) {
-      return `${names[0]} og ${names[1]}`
-    } else if (names.length <= 3) {
-      return `${names.slice(0, -1).join(', ')} og ${names[names.length - 1]}`
-    } else {
-      return `${names.slice(0, 2).join(', ')} og ${names.length - 2} andre`
-    }
-  }
 
   // Hent hendelser fra API
   const fetchEvents = async () => {
@@ -68,9 +72,7 @@ export default function FamilyCalendarPage() {
         // Konverter datostrenger til Date-objekter
         const eventsWithDates = result.data.map((event: Event) => ({
           ...event,
-          date: new Date(event.date),
-          // Ensure attendees is always an array
-          attendees: Array.isArray(event.attendees) ? event.attendees : []
+          date: new Date(event.date)
         }))
         setEvents(eventsWithDates)
       } else {
@@ -93,6 +95,13 @@ export default function FamilyCalendarPage() {
   const todaysEvents = events.filter(event => {
     const today = new Date()
     return event.date.toDateString() === today.toDateString()
+  })
+
+  // Get tomorrow's events
+  const tomorrowsEvents = events.filter(event => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return event.date.toDateString() === tomorrow.toDateString()
   })
 
   const getEventTypeClass = (type: Event['type']) => {
@@ -182,35 +191,67 @@ export default function FamilyCalendarPage() {
         </header>
 
         <div className="calendar-grid">
-          {/* Today's Events */}
+          {/* Today's and Tomorrow's Events */}
           <div className="events-card">
             <h2 className="card-title">
-              Dagens hendelser
+              Kommende hendelser
             </h2>
-            <div className="events-list">
-              {loading ? (
-                <p className="event-details">Laster hendelser...</p>
-              ) : error ? (
-                <div>
-                  <p className="event-details" style={{ color: 'red' }}>{error}</p>
-                  <button
-                    onClick={fetchEvents}
-                    className="nav-button nav-button-today"
-                    style={{ marginTop: '0.5rem' }}
-                  >
-                    Prøv igjen
-                  </button>
-                </div>
-              ) : todaysEvents.length > 0 ? (
-                todaysEvents.map(event => (
-                  <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
-                    <p className="event-title">{event.title}</p>
-                    <p className="event-details">{event.time} - {formatAttendees(event.attendees)}</p>
+
+            {/* Today's Events Section */}
+            <div className="events-section">
+              <h3 className="section-title">I dag</h3>
+              <div className="events-list">
+                {loading ? (
+                  <p className="event-details">Laster hendelser...</p>
+                ) : error ? (
+                  <div>
+                    <p className="event-details" style={{ color: 'red' }}>{error}</p>
+                    <button
+                      onClick={fetchEvents}
+                      className="nav-button nav-button-today"
+                      style={{ marginTop: '0.5rem' }}
+                    >
+                      Prøv igjen
+                    </button>
                   </div>
-                ))
-              ) : (
-                <p className="event-details">Ingen hendelser planlagt for i dag</p>
-              )}
+                ) : todaysEvents.length > 0 ? (
+                  todaysEvents.map(event => (
+                    <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
+                      <p className="event-title">{event.title}</p>
+                      <p className="event-details">
+                        {event.time}
+                        {renderAttendees(event.attendees) && ` - ${renderAttendees(event.attendees)}`}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="event-details">Ingen hendelser planlagt for i dag</p>
+                )}
+              </div>
+            </div>
+
+            {/* Tomorrow's Events Section */}
+            <div className="events-section">
+              <h3 className="section-title">I morgen</h3>
+              <div className="events-list">
+                {loading ? (
+                  <p className="event-details">Laster hendelser...</p>
+                ) : error ? (
+                  <p className="event-details" style={{ color: 'red' }}>Kan ikke laste hendelser</p>
+                ) : tomorrowsEvents.length > 0 ? (
+                  tomorrowsEvents.map(event => (
+                    <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
+                      <p className="event-title">{event.title}</p>
+                      <p className="event-details">
+                        {event.time}
+                        {renderAttendees(event.attendees) && ` - ${renderAttendees(event.attendees)}`}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="event-details">Ingen hendelser planlagt for i morgen</p>
+                )}
+              </div>
             </div>
           </div>
 
