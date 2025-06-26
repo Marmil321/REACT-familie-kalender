@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import './main/styles/main.css'
 import AddEventPopup from './main/components/AddEventPopup'
 import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
+import { familyMembers } from './main/utility/familyMembers'
 
 interface Event {
   id: number
@@ -46,6 +47,61 @@ const renderAttendees = (attendees: string | Array<{id: string, name: string}> |
   }
 
   return String(attendees)
+}
+
+// Helper function to extract attendee names from events
+const extractAttendeeNames = (attendees: string | Array<{id: string, name: string}> | object | null): string[] => {
+  if (!attendees) return []
+
+  // If it's a string, split by comma or return single name
+  if (typeof attendees === 'string') {
+    return attendees.split(',').map(name => name.trim().toLowerCase())
+  }
+
+  // If it's an array of objects with name property
+  if (Array.isArray(attendees)) {
+    return attendees
+      .map(attendee => {
+        if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
+          return String(attendee.name).toLowerCase()
+        }
+        return String(attendee).toLowerCase()
+      })
+      .filter(name => name.length > 0)
+  }
+
+  // If it's a single object with name property
+  if (typeof attendees === 'object' && attendees !== null) {
+    if ('name' in attendees && typeof attendees.name === 'string') {
+      return [attendees.name.toLowerCase()]
+    }
+  }
+
+  return []
+}
+
+// Helper function to get family member colors for a specific date
+const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => {
+  const dateEvents = events.filter(event =>
+    event.date.toDateString() === date.toDateString()
+  )
+
+  const allAttendeeNames = new Set<string>()
+
+  dateEvents.forEach(event => {
+    const attendeeNames = extractAttendeeNames(event.attendees)
+    attendeeNames.forEach(name => allAttendeeNames.add(name))
+  })
+
+  const colors: string[] = []
+
+  familyMembers.forEach(member => {
+    if (allAttendeeNames.has(member.name.toLowerCase())) {
+      colors.push(member.color)
+    }
+  })
+
+  return colors
 }
 
 export default function FamilyCalendarPage() {
@@ -296,9 +352,8 @@ export default function FamilyCalendarPage() {
               {calendarDates.map((date, i) => {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
                 const isToday = date.toDateString() === new Date().toDateString()
-                const hasEvents = events.some(event =>
-                  event.date.toDateString() === date.toDateString()
-                )
+                const familyMemberColors = getFamilyMemberColorsForDate(date, events)
+                const hasEvents = familyMemberColors.length > 0
 
                 return (
                   <div
@@ -307,7 +362,17 @@ export default function FamilyCalendarPage() {
                     onClick={() => handleDateClick(date)}
                   >
                     <span className="date-number">{date.getDate()}</span>
-                    {hasEvents && <div className="event-dot"></div>}
+                    {hasEvents && (
+                      <div className="event-dots-container">
+                        {familyMemberColors.map((color, index) => (
+                          <div
+                            key={index}
+                            className="event-dot"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}
