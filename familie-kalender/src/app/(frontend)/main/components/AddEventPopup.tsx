@@ -7,7 +7,7 @@ interface Event {
   id?: number
   title: string
   time: string
-  attendees: string | Array<{id: string, name: string}>
+  attendees: Array<{name: string}>
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
 }
@@ -28,7 +28,6 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
   })
 
   const [selectedFamilyMembers, setSelectedFamilyMembers] = useState<string[]>([])
-  const [customAttendees, setCustomAttendees] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -59,43 +58,30 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
     })
   }
 
+  const handleSelectAll = () => {
+    setSelectedFamilyMembers(familyMembers.map(member => member.id))
+  }
+
+  const handleDeselectAll = () => {
+    setSelectedFamilyMembers([])
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
 
     try {
-      // Build attendees data - matching the expected API format
-      let attendees: string | Array<{id: string, name: string}> = ''
+      // Build attendees data - let database auto-generate IDs
+      let attendees: Array<{name: string}> = []
 
       if (selectedFamilyMembers.length > 0) {
         attendees = selectedFamilyMembers.map(memberId => {
           const member = familyMembers.find(fm => fm.id === memberId)
           return {
-            id: memberId, // Use the simple ID for now, let backend handle ObjectId generation
             name: member?.name.toLowerCase() || memberId.toLowerCase()
           }
         })
-
-        // If there are also custom attendees, combine them
-        if (customAttendees.trim()) {
-          if (typeof attendees === 'object' && Array.isArray(attendees)) {
-            const customNames = customAttendees.split(',').map(name => name.trim()).filter(name => name.length > 0)
-            customNames.forEach(name => {
-              (attendees as Array<{id: string, name: string}>).push({
-                id: name.toLowerCase().replace(/\s+/g, ''), // Simple ID from name
-                name: name.toLowerCase()
-              })
-            })
-          }
-        }
-      } else if (customAttendees.trim()) {
-        // Only custom attendees - convert to array format
-        const customNames = customAttendees.split(',').map(name => name.trim()).filter(name => name.length > 0)
-        attendees = customNames.map(name => ({
-          id: name.toLowerCase().replace(/\s+/g, ''),
-          name: name.toLowerCase()
-        }))
       }
 
       const submitData = {
@@ -124,7 +110,6 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
           type: 'family'
         })
         setSelectedFamilyMembers([])
-        setCustomAttendees('')
 
         // Notify parent component
         onEventAdded()
@@ -144,7 +129,6 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
     if (!isSubmitting) {
       setError(null)
       setSelectedFamilyMembers([])
-      setCustomAttendees('')
       onClose()
     }
   }
@@ -247,9 +231,29 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
 
           {/* Family Members Selection */}
           <div className="form-group">
-            <label className="form-label">
-              Familiemedlemmer
-            </label>
+            <div className="family-members-header">
+              <label className="form-label">
+                Familiemedlemmer
+              </label>
+              <div className="selection-buttons">
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  className="select-button select-all"
+                  disabled={isSubmitting}
+                >
+                  Velg alle
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeselectAll}
+                  className="select-button deselect-all"
+                  disabled={isSubmitting}
+                >
+                  Fjern alle
+                </button>
+              </div>
+            </div>
             <div className="family-members-grid">
               {familyMembers.map(member => (
                 <label key={member.id} className="family-member-option">
@@ -268,22 +272,6 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
                 </label>
               ))}
             </div>
-          </div>
-
-          {/* Custom Attendees */}
-          <div className="form-group">
-            <label htmlFor="customAttendees" className="form-label">
-              Andre deltakere
-            </label>
-            <input
-              type="text"
-              id="customAttendees"
-              value={customAttendees}
-              onChange={(e) => setCustomAttendees(e.target.value)}
-              className="form-input"
-              placeholder="Andre deltakere (kommaseparert)"
-              disabled={isSubmitting}
-            />
           </div>
 
           <div className="form-actions">
@@ -426,6 +414,54 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
         }
 
         /* Family Members Selection Styles */
+        .family-members-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .selection-buttons {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .select-button {
+          padding: 0.25rem 0.75rem;
+          border: 1px solid var(--color-border, #f2e6db);
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background-color: white;
+        }
+
+        .select-all {
+          color: var(--color-primary, #f28c8c);
+          border-color: var(--color-primary, #f28c8c);
+        }
+
+        .select-all:hover:not(:disabled) {
+          background-color: var(--color-primary, #f28c8c);
+          color: white;
+        }
+
+        .deselect-all {
+          color: var(--color-text-secondary, #6e6e6e);
+          border-color: var(--color-border, #f2e6db);
+        }
+
+        .deselect-all:hover:not(:disabled) {
+          background-color: var(--color-text-secondary, #6e6e6e);
+          color: white;
+        }
+
+        .select-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
         .family-members-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -550,6 +586,20 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
 
           .family-members-grid {
             grid-template-columns: 1fr;
+          }
+
+          .family-members-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+
+          .selection-buttons {
+            align-self: stretch;
+          }
+
+          .select-button {
+            flex: 1;
           }
 
           .form-actions {
