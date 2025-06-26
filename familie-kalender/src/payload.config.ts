@@ -50,7 +50,7 @@ export default buildConfig({
   // This config helps us configure global or default features that the other editors can inherit
 db: sqliteAdapter({
   client: {
-    url: 'file:C:/Users/marcu/OneDrive/Documents/GitHub/Familie-kalender-REACT/SQLITE/kalender.db',
+    url: process.env.DATABASE_PATH || 'file:./kalender.db',
   },
 }),
 
