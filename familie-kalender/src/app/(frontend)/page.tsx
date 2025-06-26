@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import './main/styles/main.css'
 import AddEventPopup from './main/components/AddEventPopup'
 import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
+import ClickedDatePopup from './main/components/ClickedDatePopup'
+import CalendarDateCell from './main/components/CalendarDateCell'
 import { familyMembers } from './main/utility/familyMembers'
 
 interface Event {
@@ -15,20 +17,20 @@ interface Event {
   date: Date
 }
 
-// Helper function to safely render attendees
+// Hjelpefunksjon for å trygt vise deltakere
 const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
   if (!attendees) return ''
 
-  // If it's a string, return as is
+  // Hvis det er en streng, returner som den er
   if (typeof attendees === 'string') return attendees
 
-  // If it's an array of objects with name property
+  // Hvis det er en array med objekter som har name-egenskap
   if (Array.isArray(attendees)) {
     return attendees
       .map(attendee => {
         if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
           let name = attendee.name
-          //set first letter to uppercase
+          // Sett første bokstav til stor bokstav
           name = name.charAt(0).toUpperCase() + name.slice(1)
           return name
         }
@@ -37,28 +39,28 @@ const renderAttendees = (attendees: string | Array<{id: string, name: string}> |
       .join(', ')
   }
 
-  // If it's a single object with name property
+  // Hvis det er et enkelt objekt med name-egenskap
   if (typeof attendees === 'object' && attendees !== null) {
     if ('name' in attendees && typeof attendees.name === 'string') {
       return attendees.name
     }
-    // Fallback for other object structures
+    // Fallback for andre objektstrukturer
     return JSON.stringify(attendees)
   }
 
   return String(attendees)
 }
 
-// Helper function to extract attendee names from events
+// Hjelpefunksjon for å hente ut deltakernavn fra hendelser
 const extractAttendeeNames = (attendees: string | Array<{id: string, name: string}> | object | null): string[] => {
   if (!attendees) return []
 
-  // If it's a string, split by comma or return single name
+  // Hvis det er en streng, del på komma eller returner enkelt navn
   if (typeof attendees === 'string') {
     return attendees.split(',').map(name => name.trim().toLowerCase())
   }
 
-  // If it's an array of objects with name property
+  // Hvis det er en array med objekter som har name-egenskap
   if (Array.isArray(attendees)) {
     return attendees
       .map(attendee => {
@@ -70,7 +72,7 @@ const extractAttendeeNames = (attendees: string | Array<{id: string, name: strin
       .filter(name => name.length > 0)
   }
 
-  // If it's a single object with name property
+  // Hvis det er et enkelt objekt med name-egenskap
   if (typeof attendees === 'object' && attendees !== null) {
     if ('name' in attendees && typeof attendees.name === 'string') {
       return [attendees.name.toLowerCase()]
@@ -80,7 +82,7 @@ const extractAttendeeNames = (attendees: string | Array<{id: string, name: strin
   return []
 }
 
-// Helper function to get family member colors for a specific date
+// Hjelpefunksjon for å få familiemedlemfarger for en bestemt dato
 const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => {
   const dateEvents = events.filter(event =>
     event.date.toDateString() === date.toDateString()
@@ -110,9 +112,10 @@ export default function FamilyCalendarPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Popup states
+  // Popup-tilstander
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false)
   const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
+  const [isDayEventsPopupOpen, setIsDayEventsPopupOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
 
   // Hent hendelser fra API
@@ -147,13 +150,13 @@ export default function FamilyCalendarPage() {
     fetchEvents()
   }, [])
 
-  // Get today's events
+  // Få dagens hendelser
   const todaysEvents = events.filter(event => {
     const today = new Date()
     return event.date.toDateString() === today.toDateString()
   })
 
-  // Get tomorrow's events
+  // Få morgendagens hendelser
   const tomorrowsEvents = events.filter(event => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -181,7 +184,7 @@ export default function FamilyCalendarPage() {
     })
   }
 
-  // Generate calendar dates for current month
+  // Generer kalenderdatoer for gjeldende måned
   const generateCalendarDates = () => {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
@@ -202,24 +205,30 @@ export default function FamilyCalendarPage() {
 
   const calendarDates = generateCalendarDates()
 
-  // Handle date click
+  // Håndter datoklikk
   const handleDateClick = (date: Date) => {
+    console.log('🎯 Dato klikket fra hovedkomponent:', {
+      dato: date.toLocaleDateString('nb-NO'),
+      tidspunkt: new Date().toISOString()
+    })
+
     setSelectedDate(date)
-    setIsAddPopupOpen(true)
+    setIsDayEventsPopupOpen(true)
   }
 
-  // Handle add event button click
+  // Håndter legg til hendelse-knapp klikk
   const handleAddEventClick = () => {
-    setSelectedDate(new Date()) // Default to today
+    const today = new Date()
+    setSelectedDate(today) // Standard til i dag
     setIsAddPopupOpen(true)
   }
 
-  // Handle view all events button click
+  // Håndter se alle hendelser-knapp klikk
   const handleViewAllEventsClick = () => {
     setIsViewAllPopupOpen(true)
   }
 
-  // Handle popup close
+  // Håndter popup lukking
   const handleAddPopupClose = () => {
     setIsAddPopupOpen(false)
     setSelectedDate(undefined)
@@ -229,9 +238,21 @@ export default function FamilyCalendarPage() {
     setIsViewAllPopupOpen(false)
   }
 
-  // Handle event added/modified
+  const handleDayEventsPopupClose = () => {
+    setIsDayEventsPopupOpen(false)
+    setSelectedDate(undefined)
+  }
+
+  // Håndter legg til hendelse fra dag popup
+  const handleAddEventFromDayPopup = (date: Date) => {
+    setIsDayEventsPopupOpen(false)
+    setSelectedDate(date)
+    setIsAddPopupOpen(true)
+  }
+
+  // Håndter hendelse lagt til/endret
   const handleEventChanged = () => {
-    fetchEvents() // Refresh events list
+    fetchEvents() // Oppdater hendelsesliste
   }
 
   return (
@@ -247,13 +268,13 @@ export default function FamilyCalendarPage() {
         </header>
 
         <div className="calendar-grid">
-          {/* Today's and Tomorrow's Events */}
+          {/* Dagens og morgendagens hendelser */}
           <div className="events-card">
             <h2 className="card-title">
               Kommende hendelser
             </h2>
 
-            {/* Today's Events Section */}
+            {/* Dagens hendelser-seksjon */}
             <div className="events-section">
               <h3 className="section-title">I dag</h3>
               <div className="events-list">
@@ -286,7 +307,7 @@ export default function FamilyCalendarPage() {
               </div>
             </div>
 
-            {/* Tomorrow's Events Section */}
+            {/* Morgendagens hendelser-seksjon */}
             <div className="events-section">
               <h3 className="section-title">I morgen</h3>
               <div className="events-list">
@@ -311,7 +332,7 @@ export default function FamilyCalendarPage() {
             </div>
           </div>
 
-          {/* Calendar Grid */}
+          {/* Kalenderrutenett */}
           <div className="calendar-card">
             <div className="calendar-nav">
               <h2 className="card-title">
@@ -339,7 +360,7 @@ export default function FamilyCalendarPage() {
               </div>
             </div>
 
-            {/* Calendar header */}
+            {/* Kalenderoverskrift */}
             <div className="calendar-header-row">
               {['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'].map(day => (
                 <div key={day} className="calendar-day-header">
@@ -353,34 +374,24 @@ export default function FamilyCalendarPage() {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
                 const isToday = date.toDateString() === new Date().toDateString()
                 const familyMemberColors = getFamilyMemberColorsForDate(date, events)
-                const hasEvents = familyMemberColors.length > 0
 
                 return (
-                  <div
+                  <CalendarDateCell
                     key={i}
-                    className={`calendar-date-cell ${!isCurrentMonth ? 'other-month' : ''} ${isToday ? 'today' : ''}`}
-                    onClick={() => handleDateClick(date)}
-                  >
-                    <span className="date-number">{date.getDate()}</span>
-                    {hasEvents && (
-                      <div className="event-dots-container">
-                        {familyMemberColors.map((color, index) => (
-                          <div
-                            key={index}
-                            className="event-dot"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                    date={date}
+                    isCurrentMonth={isCurrentMonth}
+                    isToday={isToday}
+                    events={events}
+                    familyMemberColors={familyMemberColors}
+                    onDateClick={handleDateClick}
+                  />
                 )
               })}
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Hurtighandlinger */}
         <div className="quick-actions">
           <button
             className="action-button button-blue"
@@ -401,6 +412,15 @@ export default function FamilyCalendarPage() {
       </div>
 
       {/* Popups */}
+      <ClickedDatePopup
+        isOpen={isDayEventsPopupOpen}
+        selectedDate={selectedDate || null}
+        events={events}
+        onClose={handleDayEventsPopupClose}
+        onAddEvent={handleAddEventFromDayPopup}
+        onRefresh={handleEventChanged}
+      />
+
       <AddEventPopup
         isOpen={isAddPopupOpen}
         onClose={handleAddPopupClose}

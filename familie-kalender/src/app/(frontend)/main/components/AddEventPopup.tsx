@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { familyMembers } from '../utility/familyMembers'
 
 interface Event {
@@ -20,9 +20,16 @@ interface AddEventPopupProps {
 }
 
 export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedDate }: AddEventPopupProps) {
+  // Helper function to format date for input (fixes timezone issue)
+  const formatDateForInput = (date: Date) => {
+    const adjustedDate = new Date(date)
+    adjustedDate.setDate(adjustedDate.getDate() + 1) // Add 1 day to fix timezone issue
+    return adjustedDate.toISOString().split('T')[0]
+  }
+
   const [formData, setFormData] = useState({
     title: '',
-    date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    date: selectedDate ? formatDateForInput(selectedDate) : formatDateForInput(new Date()),
     time: '',
     type: 'family' as Event['type']
   })
@@ -30,6 +37,31 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
   const [selectedFamilyMembers, setSelectedFamilyMembers] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Update form data when selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      setFormData(prev => ({
+        ...prev,
+        date: formatDateForInput(selectedDate)
+      }))
+    }
+  }, [selectedDate])
+
+  // Reset form when popup opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      // Reset form when opening
+      setFormData({
+        title: '',
+        date: selectedDate ? formatDateForInput(selectedDate) : formatDateForInput(new Date()),
+        time: '',
+        type: 'family'
+      })
+      setSelectedFamilyMembers([])
+      setError(null)
+    }
+  }, [isOpen, selectedDate])
 
   const eventTypes = [
     { value: 'family', label: 'Familie' },
@@ -105,7 +137,7 @@ export default function AddEventPopup({ isOpen, onClose, onEventAdded, selectedD
         // Reset form
         setFormData({
           title: '',
-          date: selectedDate ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          date: selectedDate ? formatDateForInput(selectedDate) : formatDateForInput(new Date()),
           time: '',
           type: 'family'
         })
