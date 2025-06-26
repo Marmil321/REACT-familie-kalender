@@ -7,6 +7,7 @@ import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
 import ClickedDatePopup from './main/components/ClickedDatePopup'
 import CalendarDateCell from './main/components/CalendarDateCell'
 import { familyMembers } from './main/utility/familyMembers'
+import { useCurrentTime, timeUtils } from './main/hooks/useCurrentTime'
 
 interface Event {
   id: number
@@ -21,16 +22,13 @@ interface Event {
 const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
   if (!attendees) return ''
 
-  // Hvis det er en streng, returner som den er
   if (typeof attendees === 'string') return attendees
 
-  // Hvis det er en array med objekter som har name-egenskap
   if (Array.isArray(attendees)) {
     return attendees
       .map(attendee => {
         if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
           let name = attendee.name
-          // Sett første bokstav til stor bokstav
           name = name.charAt(0).toUpperCase() + name.slice(1)
           return name
         }
@@ -39,12 +37,10 @@ const renderAttendees = (attendees: string | Array<{id: string, name: string}> |
       .join(', ')
   }
 
-  // Hvis det er et enkelt objekt med name-egenskap
   if (typeof attendees === 'object' && attendees !== null) {
     if ('name' in attendees && typeof attendees.name === 'string') {
       return attendees.name
     }
-    // Fallback for andre objektstrukturer
     return JSON.stringify(attendees)
   }
 
@@ -55,12 +51,10 @@ const renderAttendees = (attendees: string | Array<{id: string, name: string}> |
 const extractAttendeeNames = (attendees: string | Array<{id: string, name: string}> | object | null): string[] => {
   if (!attendees) return []
 
-  // Hvis det er en streng, del på komma eller returner enkelt navn
   if (typeof attendees === 'string') {
     return attendees.split(',').map(name => name.trim().toLowerCase())
   }
 
-  // Hvis det er en array med objekter som har name-egenskap
   if (Array.isArray(attendees)) {
     return attendees
       .map(attendee => {
@@ -72,7 +66,6 @@ const extractAttendeeNames = (attendees: string | Array<{id: string, name: strin
       .filter(name => name.length > 0)
   }
 
-  // Hvis det er et enkelt objekt med name-egenskap
   if (typeof attendees === 'object' && attendees !== null) {
     if ('name' in attendees && typeof attendees.name === 'string') {
       return [attendees.name.toLowerCase()]
@@ -108,6 +101,8 @@ const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => 
 
 export default function FamilyCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
+  // 🔧 RETTELSE: Bruk useCurrentTime hook i stedet for useState
+  const currentTime = useCurrentTime()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -117,6 +112,15 @@ export default function FamilyCalendarPage() {
   const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
   const [isDayEventsPopupOpen, setIsDayEventsPopupOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+
+  // Bruk hjelpefunksjonene med den automatisk oppdaterte currentTime
+  const todaysEvents = events.filter(event =>
+    timeUtils.isToday(event.date, currentTime)
+  )
+
+  const tomorrowsEvents = events.filter(event =>
+    timeUtils.isTomorrow(event.date, currentTime)
+  )
 
   // Hent hendelser fra API
   const fetchEvents = async () => {
@@ -128,7 +132,6 @@ export default function FamilyCalendarPage() {
       const result = await response.json()
 
       if (result.success) {
-        // Konverter datostrenger til Date-objekter
         const eventsWithDates = result.data.map((event: Event) => ({
           ...event,
           date: new Date(event.date)
@@ -150,19 +153,6 @@ export default function FamilyCalendarPage() {
     fetchEvents()
   }, [])
 
-  // Få dagens hendelser
-  const todaysEvents = events.filter(event => {
-    const today = new Date()
-    return event.date.toDateString() === today.toDateString()
-  })
-
-  // Få morgendagens hendelser
-  const tomorrowsEvents = events.filter(event => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    return event.date.toDateString() === tomorrow.toDateString()
-  })
-
   const getEventTypeClass = (type: Event['type']) => {
     const typeClasses: Record<Event['type'], string> = {
       sports: 'event-blue',
@@ -173,15 +163,6 @@ export default function FamilyCalendarPage() {
       annet: 'event-green'
     }
     return typeClasses[type]
-  }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('nb-NO', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
   }
 
   // Generer kalenderdatoer for gjeldende måned
@@ -218,8 +199,7 @@ export default function FamilyCalendarPage() {
 
   // Håndter legg til hendelse-knapp klikk
   const handleAddEventClick = () => {
-    const today = new Date()
-    setSelectedDate(today) // Standard til i dag
+    setSelectedDate(new Date(currentTime)) // Bruk den oppdaterte currentTime
     setIsAddPopupOpen(true)
   }
 
@@ -263,7 +243,7 @@ export default function FamilyCalendarPage() {
             Familiekalender
           </h1>
           <p className="calendar-date">
-            {formatDate(currentDate)}
+            {timeUtils.formatNorwegian(currentTime)} {/* Bruk timeUtils formatering */}
           </p>
         </header>
 
@@ -346,7 +326,7 @@ export default function FamilyCalendarPage() {
                   ←
                 </button>
                 <button
-                  onClick={() => setCurrentDate(new Date())}
+                  onClick={() => setCurrentDate(new Date(currentTime))} // Bruk den oppdaterte currentTime
                   className="nav-button nav-button-today"
                 >
                   I dag
@@ -372,7 +352,7 @@ export default function FamilyCalendarPage() {
             <div className="calendar-dates">
               {calendarDates.map((date, i) => {
                 const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-                const isToday = date.toDateString() === new Date().toDateString()
+                const isToday = timeUtils.isToday(date, currentTime) // Bruk timeUtils
                 const familyMemberColors = getFamilyMemberColorsForDate(date, events)
 
                 return (

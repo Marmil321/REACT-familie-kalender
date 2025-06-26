@@ -4,36 +4,36 @@ export const familyMembers = [
   {
     name: 'Marcus',
     id: 'marcus',
-    color: '#DAF7A6', //green
+    color: '#28A745', //green
   },
   {
     name: 'Lars',
     id: 'lars',
-    color: '#7DF9FF',//blue
+    color: '#33A1FF',//blue
   },
   {
     name: 'Lucas',
     id: 'lucas',
-    color: '#FFC300',//orange
+    color: '#FF5733',//orange
   },
   {
     name: 'Noomi',
     id: 'noomi',
-    color: '#8e44ad',//purple
+    color: '#8E44AD',//purple
   },
   {
     name: 'Meline',
     id: 'meline',
-    color: '#e74c3c',//red
+    color: '#FFC107',//red
   },
   {
     name: 'Bailey',
     id: 'bailey',
-    color: '#FF33A1',//pink
+    color: '#E91E63',//pink
   },
   {
     name: 'Marita',
     id: 'marita',
-    color: '#f4d03f',//yellow
+    color: '#A0522D',//yellow
   }
 ];
