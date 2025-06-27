@@ -5,18 +5,17 @@ import config from '@/payload.config'
 type Attendee = {
   name: string
 }
-
-interface Params {
-  params: {
-    id: string
-  }
+type Params = {
+  params: Promise<{id: string }>
 }
 
 // GET single event
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params
+
     const payload = await getPayload({ config })
-    const eventId = params.id
+    const eventId = resolvedParams.id
 
     // Valider at ID er et gyldig nummer
     if (!eventId || isNaN(parseInt(eventId))) {
@@ -66,10 +65,11 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 // UPDATE event
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params
     const payload = await getPayload({ config })
-    const eventId = params.id
+    const eventId = resolvedParams.id
     const body = await request.json()
 
     // Valider at ID er et gyldig nummer
@@ -179,8 +179,9 @@ export async function PUT(request: NextRequest, { params }: Params) {
 // DELETE event
 export async function DELETE(request: NextRequest, { params }: Params) {
   try {
+    const resolvedParams = await params
     const payload = await getPayload({ config })
-    const eventId = params.id
+    const eventId = resolvedParams.id
 
     // Valider at ID er et gyldig nummer
     if (!eventId || isNaN(parseInt(eventId))) {
