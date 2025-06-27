@@ -1,0 +1,316 @@
+.popup-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+
+        .popup-container {
+          background-color: white;
+          border-radius: 1rem;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+          width: 100%;
+          max-width: 500px;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .popup-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem 1.5rem 0 1.5rem;
+          border-bottom: 1px solid var(--color-border, #f2e6db);
+          margin-bottom: 1.5rem;
+        }
+
+        .popup-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--color-primary, #f28c8c);
+          margin: 0;
+        }
+
+        .popup-close-button {
+          background: none;
+          border: none;
+          font-size: 2rem;
+          color: var(--color-text-secondary, #6e6e6e);
+          cursor: pointer;
+          padding: 0;
+          width: 2rem;
+          height: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+        }
+
+        .popup-close-button:hover:not(:disabled) {
+          background-color: var(--color-border, #f2e6db);
+        }
+
+        .popup-close-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .popup-form {
+          padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        .form-group {
+          margin-bottom: 1.25rem;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .form-label {
+          display: block;
+          font-weight: 600;
+          color: var(--color-text-primary, #4a4a4a);
+          margin-bottom: 0.5rem;
+          font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-select {
+          width: 100%;
+          padding: 0.75rem;
+          border: 2px solid var(--color-border, #f2e6db);
+          border-radius: 8px;
+          font-size: 1rem;
+          font-family: 'Nunito', sans-serif;
+          background-color: white;
+          color: var(--color-text-primary, #4a4a4a);
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+          outline: none;
+          border-color: var(--color-primary, #f28c8c);
+          box-shadow: 0 0 0 3px rgba(242, 140, 140, 0.1);
+        }
+
+        .form-input:disabled,
+        .form-select:disabled {
+          background-color: #f5f5f5;
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        .form-input::placeholder {
+          color: var(--color-text-secondary, #6e6e6e);
+        }
+
+        /* Family Members Selection Styles */
+        .family-members-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.75rem;
+        }
+
+        .selection-buttons {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .select-button {
+          padding: 0.25rem 0.75rem;
+          border: 1px solid var(--color-border, #f2e6db);
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background-color: white;
+        }
+
+        .select-all {
+          color: var(--color-primary, #f28c8c);
+          border-color: var(--color-primary, #f28c8c);
+        }
+
+        .select-all:hover:not(:disabled) {
+          background-color: var(--color-primary, #f28c8c);
+          color: white;
+        }
+
+        .deselect-all {
+          color: var(--color-text-secondary, #6e6e6e);
+          border-color: var(--color-border, #f2e6db);
+        }
+
+        .deselect-all:hover:not(:disabled) {
+          background-color: var(--color-text-secondary, #6e6e6e);
+          color: white;
+        }
+
+        .select-button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .family-members-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .family-member-option {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.5rem;
+          border: 2px solid var(--color-border, #f2e6db);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background-color: white;
+        }
+
+        .family-member-option:hover {
+          border-color: var(--color-primary, #f28c8c);
+          background-color: #fef2f2;
+        }
+
+        .family-member-option:has(.family-member-checkbox:checked) {
+          border-color: var(--color-primary, #f28c8c);
+          background-color: rgba(242, 140, 140, 0.1);
+        }
+
+        .family-member-checkbox {
+          margin: 0;
+          cursor: pointer;
+        }
+
+        .family-member-indicator {
+          width: 0.75rem;
+          height: 0.75rem;
+          border-radius: 50%;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          flex-shrink: 0;
+        }
+
+        .family-member-name {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--color-text-primary, #4a4a4a);
+        }
+
+        .error-message {
+          background-color: #fef2f2;
+          border: 1px solid #fecaca;
+          color: #dc2626;
+          padding: 0.75rem;
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          font-size: 0.9rem;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: flex-end;
+          margin-top: 2rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--color-border, #f2e6db);
+        }
+
+        .button-primary {
+          background-color: var(--color-primary, #f28c8c);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .button-primary:hover:not(:disabled) {
+          background-color: var(--color-accent, #90c5a9);
+          transform: translateY(-1px);
+        }
+
+        .button-primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        .button-secondary {
+          background-color: transparent;
+          color: var(--color-text-secondary, #6e6e6e);
+          border: 2px solid var(--color-border, #f2e6db);
+          border-radius: 8px;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .button-secondary:hover:not(:disabled) {
+          border-color: var(--color-primary, #f28c8c);
+          color: var(--color-primary, #f28c8c);
+        }
+
+        .button-secondary:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        @media (max-width: 640px) {
+          .popup-container {
+            margin: 1rem;
+            max-height: calc(100vh - 2rem);
+          }
+
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .family-members-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .family-members-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+
+          .selection-buttons {
+            align-self: stretch;
+          }
+
+          .select-button {
+            flex: 1;
+          }
+
+          .form-actions {
+            flex-direction: column-reverse;
+          }
+
+          .button-primary,
+          .button-secondary {
+            width: 100%;
+          }
+        }

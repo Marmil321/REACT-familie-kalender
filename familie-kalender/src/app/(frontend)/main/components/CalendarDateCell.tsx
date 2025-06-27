@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import '../styles/components/calendar-date-cell.css'
 
 interface Event {
   id: number
@@ -112,128 +113,6 @@ export default function CalendarDateCell({
           {dateEvents.length}
         </div>
       )}
-
-      <style jsx>{`
-        .calendar-date-cell {
-          height: 5rem;
-          border: 1px solid #e5e7eb;
-          padding: 0.25rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          position: relative;
-          background-color: white;
-        }
-
-        .calendar-date-cell:hover {
-          background-color: #f9fafb;
-          border-color: #d1d5db;
-          transform: translateY(-1px);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .calendar-date-cell.hovered {
-          background-color: #f0f9ff;
-          border-color: #3b82f6;
-        }
-
-        .calendar-date-cell.other-month {
-          opacity: 0.4;
-        }
-
-        .calendar-date-cell.other-month:hover {
-          opacity: 0.7;
-        }
-
-        .calendar-date-cell.today {
-          background-color: #dbeafe;
-          border-color: #3b82f6;
-          font-weight: bold;
-        }
-
-        .calendar-date-cell.today:hover {
-          background-color: #bfdbfe;
-        }
-
-        .calendar-date-cell.today .date-number {
-          color: #1d4ed8;
-          font-weight: bold;
-        }
-
-        .date-number {
-          font-size: 0.875rem;
-          color: #6b7280;
-          font-weight: 500;
-        }
-
-        .event-dots-container {
-          position: absolute;
-          bottom: 0.25rem;
-          left: 0.25rem;
-          display: flex;
-          flex-wrap: wrap;
-          flex-direction: column;
-          gap: 0.15rem;
-          max-width: calc(100% - 0.5rem);
-          justify-content: flex-end;
-          align-content: flex-end;
-          max-height: calc(100% - 1.5rem);
-          overflow: visible;
-        }
-
-        .event-dot {
-          width: 0.75rem;
-          height: 0.75rem;
-          border-radius: 50%;
-          border: 1px solid rgba(255, 255, 255, 0.9);
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-          flex-shrink: 0;
-          transition: transform 0.2s ease;
-        }
-
-        .calendar-date-cell:hover .event-dot {
-          transform: scale(1.1);
-        }
-
-        .event-count-overlay {
-          position: absolute;
-          top: 0.25rem;
-          right: 0.25rem;
-          background-color: #3b82f6;
-          color: white;
-          font-size: 0.75rem;
-          font-weight: bold;
-          width: 1.25rem;
-          height: 1.25rem;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-          .calendar-date-cell {
-            height: 3rem;
-          }
-
-          .event-dot {
-            width: 0.4rem;
-            height: 0.4rem;
-          }
-
-          .event-dots-container {
-            gap: 0.1rem;
-            max-height: calc(100% - 1rem);
-          }
-
-          .event-count-overlay {
-            width: 1rem;
-            height: 1rem;
-            font-size: 0.65rem;
-          }
-        }
-      `}</style>
     </div>
   )
 }
