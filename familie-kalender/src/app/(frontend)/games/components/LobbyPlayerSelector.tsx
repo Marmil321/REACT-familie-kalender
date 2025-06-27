@@ -64,7 +64,7 @@ export default function PlayerSelector() {
       <label
         key={id}
         className={`checkbox-label ${isSelected ? 'selected' : 'unselected'}`}
-        style={{ backgroundColor: isSelected ? color : 'transparent', color: isSelected ? '#fff' : '#000' }}
+        style={{ backgroundColor: isSelected ? color : 'white', color: isSelected ? '#fff' : '#000' }}
       >
         <input
           type="checkbox"

@@ -1,0 +1,44 @@
+.game-selector {
+  text-align: center;
+  padding: 2rem;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.game-box {
+  color: var(--color-text, #333);
+  font-weight: bold;
+
+  background-color: #f5e4c3;
+  border: 1.5px solid black;
+  border-radius: 12px;
+  padding: 1.2rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-box .emoji {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.game-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.game-box.selected {
+  border-color: #d8bba3;
+  background-color: #fff9ef;
+  box-shadow: 0 0 0 3px #d8bba3;
+}

@@ -1,0 +1,6 @@
+.start-game-button {
+  transform: scale(1.2);
+
+  margin: 50px 42vw;
+  width: 15vw;
+}

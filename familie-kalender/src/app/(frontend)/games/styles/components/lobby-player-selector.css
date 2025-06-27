@@ -113,7 +113,7 @@
 }
 
 .checkbox-label.unselected {
-  background-color: transparent;
+  background-color: white;
   color: #000;
 }
 
