@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import '../styles/components/clicked-date-popup.css'
-
+import { getFamilyMembers, FamilyMember } from '../utility/familyMembers'
+type Attendee = {
+  name: string
+  id?: string
+}
 interface Event {
   id: number
   title: string
@@ -30,6 +34,7 @@ export default function ClickedDatePopup({
   onRefresh
 }: ClickedDatePopupProps) {
   const [isDeleting, setIsDeleting] = useState<number | null>(null)
+  const familyMembersData = getFamilyMembers() as FamilyMember[]
 
   if (!isOpen || !selectedDate) return null
 
@@ -44,33 +49,44 @@ export default function ClickedDatePopup({
   })
 
   // Hjelpefunksjon for å vise deltakere
-  const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
-    if (!attendees) return ''
+  const renderAttendees = (
+  attendees: string | Array<{ id: string; name: string }> | object | null
+): string => {
+  if (!attendees) return ''
 
-    if (typeof attendees === 'string') return attendees
+  const normalizeAttendees = (): { name: string }[] => {
+    if (typeof attendees === 'string') {
+      return [{ name: attendees }]
+    }
 
     if (Array.isArray(attendees)) {
-      return attendees
-        .map(attendee => {
-          if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
-            let name = attendee.name
-            name = name.charAt(0).toUpperCase() + name.slice(1)
-            return name
-          }
-          return String(attendee)
-        })
-        .join(', ')
+      return attendees.map(a =>
+        typeof a === 'object' && a !== null && 'name' in a
+          ? { name: a.name }
+          : { name: String(a) }
+      )
     }
 
-    if (typeof attendees === 'object' && attendees !== null) {
-      if ('name' in attendees && typeof attendees.name === 'string') {
-        return attendees.name
-      }
-      return JSON.stringify(attendees)
+    if (typeof attendees === 'object' && 'name' in attendees) {
+      return [{ name: (attendees as Attendee).name }]
     }
 
-    return String(attendees)
+    return []
   }
+
+  const list = normalizeAttendees()
+
+  return list
+    .map(({ name }) => {
+      const match = familyMembersData.find(
+        m => m.name.trim().toLowerCase() === name.trim().toLowerCase()
+      )
+      const emoji = match?.emoji ?? '👤'
+      const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1)
+      return `${emoji} ${capitalizedName}`
+    })
+    .join(', ')
+}
 
   const getEventTypeClass = (type: Event['type']) => {
     const typeClasses: Record<Event['type'], string> = {
@@ -219,7 +235,6 @@ export default function ClickedDatePopup({
 
                         {renderAttendees(event.attendees) && (
                           <div className="event-detail">
-                            <span className="detail-icon">👥</span>
                             <span className="detail-text">{renderAttendees(event.attendees)}</span>
                           </div>
                         )}

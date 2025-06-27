@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { getFamilyMembers, FamilyMember } from '../utility/familyMembers'
+
 interface Event {
   id: number
   title: string
@@ -18,18 +21,26 @@ interface EventsListProps {
 }
 
 // Hjelpefunksjon for å trygt vise deltakere
-const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
+const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null, familyMembers: FamilyMember[]): string => {
   if (!attendees) return ''
 
-  if (typeof attendees === 'string') return attendees
+  const getDisplayName = (name: string) => {
+    const member = familyMembers.find(m => m.name.toLowerCase() === name.toLowerCase())
+    if (member && member.emoji) {
+      return `${member.emoji} ${member.name}`
+    }
+    return name.charAt(0).toUpperCase() + name.slice(1)
+  }
+
+  if (typeof attendees === 'string') {
+    return attendees.split(',').map(name => getDisplayName(name.trim())).join(', ')
+  }
 
   if (Array.isArray(attendees)) {
     return attendees
       .map(attendee => {
         if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
-          let name = attendee.name
-          name = name.charAt(0).toUpperCase() + name.slice(1)
-          return name
+          return getDisplayName(attendee.name)
         }
         return String(attendee)
       })
@@ -38,7 +49,7 @@ const renderAttendees = (attendees: string | Array<{id: string, name: string}> |
 
   if (typeof attendees === 'object' && attendees !== null) {
     if ('name' in attendees && typeof attendees.name === 'string') {
-      return attendees.name
+      return getDisplayName(attendees.name)
     }
     return JSON.stringify(attendees)
   }
@@ -65,6 +76,13 @@ export default function EventsList({
   onRetry,
   emptyMessage
 }: EventsListProps) {
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+
+  useEffect(() => {
+    const members = getFamilyMembers()
+    setFamilyMembers(members)
+  }, [])
+
   if (loading) {
     return <p className="event-details">Laster hendelser...</p>
   }
@@ -97,7 +115,7 @@ export default function EventsList({
           <p className="event-title">{event.title}</p>
           <p className="event-details">
             {event.time}
-            {renderAttendees(event.attendees) && ` - ${renderAttendees(event.attendees)}`}
+            {renderAttendees(event.attendees, familyMembers) && ` - ${renderAttendees(event.attendees, familyMembers)}`}
           </p>
         </div>
       ))}

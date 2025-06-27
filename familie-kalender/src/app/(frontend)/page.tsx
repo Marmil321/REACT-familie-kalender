@@ -9,7 +9,8 @@ import QuickActions from './main/components/QuickActions'
 import AddEventPopup from './main/components/AddEventPopup'
 import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
 import ClickedDatePopup from './main/components/ClickedDatePopup'
-import { familyMembers } from './main/utility/familyMembers'
+import CharacterCustomizationPopup from './main/components/CharacterCustomizationPopup'
+import { getFamilyMembers, saveFamilyMembers, FamilyMember } from './main/utility/familyMembers'
 import { useCurrentTime, timeUtils } from './main/hooks/useCurrentTime'
 
 interface Event {
@@ -50,7 +51,7 @@ const extractAttendeeNames = (attendees: string | Array<{id: string, name: strin
 }
 
 // Hjelpefunksjon for å få familiemedlemfarger for en bestemt dato
-const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => {
+const getFamilyMemberColorsForDate = (date: Date, events: Event[], members: FamilyMember[]): string[] => {
   const dateEvents = events.filter(event =>
     event.date.toDateString() === date.toDateString()
   )
@@ -64,7 +65,7 @@ const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => 
 
   const colors: string[] = []
 
-  familyMembers.forEach(member => {
+  members.forEach(member => {
     if (allAttendeeNames.has(member.name.toLowerCase())) {
       colors.push(member.color)
     }
@@ -80,10 +81,14 @@ export default function FamilyCalendarPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Familiemedlemmer state
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([])
+
   // Popup-tilstander
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false)
   const [isViewAllPopupOpen, setIsViewAllPopupOpen] = useState(false)
   const [isDayEventsPopupOpen, setIsDayEventsPopupOpen] = useState(false)
+  const [isCharacterCustomizationOpen, setIsCharacterCustomizationOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
 
   // Filtrer hendelser basert på dagens og morgendagens dato
@@ -126,6 +131,12 @@ export default function FamilyCalendarPage() {
     fetchEvents()
   }, [])
 
+  // Last inn familiemedlemmer fra localStorage
+  useEffect(() => {
+    const members = getFamilyMembers()
+    setFamilyMembers(members)
+  }, [])
+
   // Navigation handlers
   const handlePreviousMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
@@ -161,8 +172,13 @@ export default function FamilyCalendarPage() {
   }
 
   const handleFamilySettingsClick = () => {
-    // TODO: Implementer familieinnstillinger
-    alert('Familieinnstillinger kommer snart!')
+    setIsCharacterCustomizationOpen(true)
+  }
+
+  // Character customization handlers
+  const handleSaveFamilyMembers = (updatedMembers: FamilyMember[]) => {
+    setFamilyMembers(updatedMembers)
+    saveFamilyMembers(updatedMembers)
   }
 
   // Popup close handlers
@@ -213,7 +229,7 @@ export default function FamilyCalendarPage() {
             onPreviousMonth={handlePreviousMonth}
             onNextMonth={handleNextMonth}
             onToday={handleToday}
-            getFamilyMemberColorsForDate={getFamilyMemberColorsForDate}
+            getFamilyMemberColorsForDate={(date, events) => getFamilyMemberColorsForDate(date, events, familyMembers)}
           />
         </div>
 
@@ -245,6 +261,13 @@ export default function FamilyCalendarPage() {
         isOpen={isViewAllPopupOpen}
         onClose={handleViewAllPopupClose}
         onRefresh={handleEventChanged}
+      />
+
+      <CharacterCustomizationPopup
+        isOpen={isCharacterCustomizationOpen}
+        onClose={() => setIsCharacterCustomizationOpen(false)}
+        familyMembers={familyMembers}
+        onSave={handleSaveFamilyMembers}
       />
     </div>
   )

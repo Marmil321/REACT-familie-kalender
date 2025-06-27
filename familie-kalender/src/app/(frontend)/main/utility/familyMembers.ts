@@ -1,6 +1,11 @@
 // utility/familyMembers.ts
-
-export const familyMembers = [
+export interface FamilyMember {
+  name: string
+  id: string
+  color: string
+  emoji?: string
+}
+const defaultFamilyMembers: FamilyMember[] = [
   {
     name: 'Marcus',
     id: 'marcus',
@@ -37,3 +42,27 @@ export const familyMembers = [
     color: '#A0522D',//yellow
   }
 ];
+// Funksjon for å hente familiemedlemmer fra localStorage eller bruke default
+export const getFamilyMembers = (): FamilyMember[] => {
+  if (typeof window === 'undefined') return defaultFamilyMembers;
+
+  const stored = localStorage.getItem('familyMembers');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return defaultFamilyMembers;
+    }
+  }
+  return defaultFamilyMembers;
+};
+
+// Funksjon for å lagre familiemedlemmer til localStorage
+export const saveFamilyMembers = (members: FamilyMember[]) => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('familyMembers', JSON.stringify(members));
+  }
+};
+
+// For bakoverkompatibilitet
+export const familyMembers = defaultFamilyMembers;
