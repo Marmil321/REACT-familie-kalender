@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import '../styles/components/character-customization-popup.css'
+import { defaultFamilyMembers } from '../utility/familyMembers'
 
 interface FamilyMember {
   name: string
@@ -39,61 +40,13 @@ const availableEmojis = [
 ];
 
 const availableColors = [
-  // Reds & Pinks
-  '#e74c3c', // Bright red
-  '#FF6F61', // Coral red
-  '#DD4124', // Red-orange
-  '#BC243C', // Crimson
-  '#9B2335', // Deep red
-  '#FF33A1', // Hot pink
-  '#F7CAC9', // Light pink
-  '#C3447A', // Rose
-  '#955251', // Mauve
-
-  // Oranges & Yellows
-  '#FFC300', // Bright yellow
-  '#f39c12', // Gold
-  '#d35400', // Burnt orange
-  '#EFC050', // Mustard yellow
-  '#f4d03f', // Lemon yellow
-  '#FFEE93', // Pale yellow
-  '#FCF6B1', // Vanilla
-
-  // Greens
-  '#DAF7A6', // Mint green
-  '#88B04B', // Olive green
-  '#2ecc71', // Bright green
-  '#27ae60', // Fresh green
-  '#16a085', // Deep teal
-  '#009B77', // Dark teal
-
-  // Cyans & Aquas
-  '#7DF9FF', // Neon cyan
-  '#98DDDE', // Pale cyan
-  '#1abc9c', // Aqua green
-  '#45B8AC', // Soft cyan
-
-  // Blues
-  '#3498db', // Light blue
-  '#2980b9', // Bright blue
-  '#5B5EA6', // Steel blue
-  '#92A8D1', // Sky blue
-  '#6B5B95', // Indigo
-
-  // Purples
-  '#8e44ad', // Purple
-  '#9b59b6', // Lavender purple
-  '#B565A7', // Violet
-  '#A569BD', // Amethyst (optional if adding)
-
-  // Browns & Warm Neutrals
-  '#DFCFBE', // Cream
-  '#FFC09F', // Soft peach
-
-  // Grays & Cool Neutrals
-  '#95a5a6', // Gray
-  '#2c3e50', // Dark slate
-  '#34495e'  // Steel gray
+  '#e74c3c', '#FF6F61', '#DD4124', '#BC243C', '#9B2335', '#FF33A1', '#F7CAC9', '#C3447A', '#955251', // red shades
+  '#FFC300', '#f39c12', '#d35400', '#EFC050', '#f4d03f', '#FFEE93', '#FCF6B1', // yellow shades
+  '#DAF7A6', '#88B04B', '#2ecc71', '#27ae60', '#16a085', '#009B77', // green shades
+  '#7DF9FF', '#98DDDE', '#1abc9c', '#45B8AC', '#3498db', '#2980b9', '#5B5EA6', '#92A8D1', '#6B5B95',// blue shades
+  '#8e44ad', '#9b59b6', '#B565A7', '#A569BD', // purple shades
+  '#DFCFBE', '#FFC09F', // beige shades
+  '#95a5a6', '#2c3e50', '#34495e' // gray shades
 ];
 
 
@@ -135,9 +88,24 @@ export default function CharacterCustomizationPopup({
     onClose()
   }
 
-  const handleReset = () => {
-    setEditedMembers([...familyMembers])
-  }
+const handleReset = () => {
+  // sjekk om det er et valgt familiemedlem
+  if (!selectedMemberId) return;
+
+  // med valgt medlem id, finn default verdien til medlemmet
+  console.log('Resetting member:', selectedMemberId)
+  const original = defaultFamilyMembers.find(member => member.id === selectedMemberId);
+  console.log('Original member:', original)
+
+  // hvis default verdien ikke finnes, gjør ingenting
+  if (!original) return;
+
+  setEditedMembers(prev =>
+    prev.map(member =>
+      member.id === selectedMemberId ? { ...original } : member
+    )
+  );
+}
 
   if (!isOpen) return null
 
