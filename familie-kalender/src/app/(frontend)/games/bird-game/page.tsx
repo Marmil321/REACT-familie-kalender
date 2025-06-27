@@ -11,8 +11,11 @@ const GAME_HEIGHT = 640;
 const BIRD_SIZE = 40;
 const birdX = 300; // Should match the bird’s horizontal position (e.g. 300px from left)
 
+interface BirdGameProps {
+  playerEmoji?: string;
+}
 
-export default function BirdGame() {
+export default function BirdGame( { playerEmoji }: BirdGameProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [birdY, setBirdY] = useState(200);
   const [pipes, setPipes] = useState<Pipe[]>([]); // Lift pipes here
@@ -116,6 +119,7 @@ export default function BirdGame() {
           hasFlapped={gameStarted}
           onFlap={() => setGameStarted(true)}
           containerHeight={GAME_HEIGHT}
+          emoji= {playerEmoji}// selected member emoji
         />
         <GamePipes
           running={gameStarted}

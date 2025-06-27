@@ -14,9 +14,11 @@ type BirdProps = {
   hasFlapped: boolean;
   onFlap: () => void;
   containerHeight: number;
+
+  emoji?: string; // optional emoji prop for customization
 };
 
-export default function Bird({ position, onPositionChange, hasFlapped, onFlap, containerHeight }: BirdProps) {
+export default function Bird({ position, onPositionChange, hasFlapped, onFlap, containerHeight, emoji}: BirdProps) {
   const [velocity, setVelocity] = useState(0);
 
   useEffect(() => {
@@ -48,7 +50,6 @@ export default function Bird({ position, onPositionChange, hasFlapped, onFlap, c
 
   return (
     <div
-      className="bird"
       style={{
         position: "absolute",
         left: "50%",
@@ -56,11 +57,16 @@ export default function Bird({ position, onPositionChange, hasFlapped, onFlap, c
         top: position,
         width: 40,
         height: 40,
-        backgroundColor: "yellow",
-        borderRadius: "50%",
+        fontSize: 32, // Adjust size of emoji
         zIndex: 5,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        userSelect: "none",
+        pointerEvents: "none",
       }}
-    />
-
-  );
+    >
+    {emoji || "🐦"}
+  </div>
+);
 }
