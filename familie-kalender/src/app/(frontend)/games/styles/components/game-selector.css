@@ -42,3 +42,20 @@
   background-color: #fff9ef;
   box-shadow: 0 0 0 3px #d8bba3;
 }
+.game-box.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  position: relative;
+}
+
+.game-box.locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.game-box .lock-msg {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 0.5rem;
+  display: block;
+}

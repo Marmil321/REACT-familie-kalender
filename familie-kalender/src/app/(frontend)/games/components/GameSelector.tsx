@@ -1,20 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import "../styles/components/game-selector.css"; // styles below
+import "../styles/components/game-selector.css";
 
 export type GameOption = {
   id: string;
   name: string;
   emoji: string;
+  maxPlayers?: number;
 };
 
 const games: GameOption[] = [
-  { id: "flappy-bird", name: "Flappy Bird", emoji: "🐦" },
-  { id: "race", name:"Race", emoji: "🏃" },
+  { id: "flappy-bird", name: "Flappy Bird", emoji: "🐦", maxPlayers: 1 },
+  { id: "race", name: "Race", emoji: "🏃" }, // no max = unlimited
 ];
 
-export default function GameSelector() {
+type Props = {
+  selectedPlayerCount: number;
+};
+
+export default function GameSelector({ selectedPlayerCount }: Props) {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
 
   return (
@@ -23,15 +28,27 @@ export default function GameSelector() {
       <div className="game-grid">
         {games.map((game) => {
           const isSelected = selectedGame === game.id;
+          const isLocked =
+            typeof game.maxPlayers === "number" &&
+            selectedPlayerCount > game.maxPlayers;
+
           return (
             <button
               key={game.id}
-              className={`game-box ${isSelected ? "selected" : ""}`}
-              onClick={() => setSelectedGame(game.id)}
+              className={`game-box ${isSelected ? "selected" : ""} ${
+                isLocked ? "locked" : ""
+              }`}
+              onClick={() => {
+                if (!isLocked) setSelectedGame(game.id);
+              }}
               type="button"
+              disabled={isLocked}
             >
               <span className="emoji">{game.emoji}</span>
               <span className="name">{game.name}</span>
+              {isLocked && (
+                <span className="lock-msg">Max {game.maxPlayers} player{game.maxPlayers !== 1 ? "s" : ""}</span>
+              )}
             </button>
           );
         })}

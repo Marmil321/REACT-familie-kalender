@@ -72,6 +72,7 @@
   margin-bottom: 1rem;
   border-radius: 8px;
   display: flex;
+  justify-content: center;
   align-items: center;
   min-height: 3rem;
 }
@@ -80,11 +81,7 @@
   cursor: default;
   user-select: none;
 }
-.selected-names {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
+
 .checkbox-container {
   display: flex;
   flex-direction: row;
