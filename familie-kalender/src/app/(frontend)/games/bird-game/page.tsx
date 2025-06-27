@@ -51,8 +51,7 @@ export default function BirdGame() {
     >
       <CheckerboardBackground />
       <div className="gamewindow-container">
-        <>
-    {/* Bird bounding box */}
+    {/*<>
     <div
       style={{
         position: "absolute",
@@ -66,10 +65,8 @@ export default function BirdGame() {
       }}
     />
 
-    {/* Pipe bounding boxes */}
     {pipes.map((pipe) => (
       <React.Fragment key={pipe.id}>
-        {/* Top pipe box */}
         <div
           style={{
             position: "absolute",
@@ -82,7 +79,6 @@ export default function BirdGame() {
             pointerEvents: "none",
           }}
         />
-        {/* Bottom pipe box */}
         <div
           style={{
             position: "absolute",
@@ -97,7 +93,7 @@ export default function BirdGame() {
         />
       </React.Fragment>
     ))}
-  </>
+  </> */}
       <div
         ref={containerRef}
         className="relative"
