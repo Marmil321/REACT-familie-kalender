@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import './main/styles/main.css'
+import CalendarHeader from './main/components/CalendarHeader'
+import EventsPanel from './main/components/EventsPanel'
+import CalendarGrid from './main/components/CalendarGrid'
+import QuickActions from './main/components/QuickActions'
 import AddEventPopup from './main/components/AddEventPopup'
 import ViewAllEventsPopup from './main/components/ViewAllEventsPopup'
 import ClickedDatePopup from './main/components/ClickedDatePopup'
-import CalendarDateCell from './main/components/CalendarDateCell'
 import { familyMembers } from './main/utility/familyMembers'
 import { useCurrentTime, timeUtils } from './main/hooks/useCurrentTime'
 
@@ -16,35 +19,6 @@ interface Event {
   attendees: string | Array<{id: string, name: string}> | object | null
   type: 'appointment' | 'school' | 'family' | 'work' | 'sports' | 'annet'
   date: Date
-}
-
-// Hjelpefunksjon for å trygt vise deltakere
-const renderAttendees = (attendees: string | Array<{id: string, name: string}> | object | null): string => {
-  if (!attendees) return ''
-
-  if (typeof attendees === 'string') return attendees
-
-  if (Array.isArray(attendees)) {
-    return attendees
-      .map(attendee => {
-        if (typeof attendee === 'object' && attendee !== null && 'name' in attendee) {
-          let name = attendee.name
-          name = name.charAt(0).toUpperCase() + name.slice(1)
-          return name
-        }
-        return String(attendee)
-      })
-      .join(', ')
-  }
-
-  if (typeof attendees === 'object' && attendees !== null) {
-    if ('name' in attendees && typeof attendees.name === 'string') {
-      return attendees.name
-    }
-    return JSON.stringify(attendees)
-  }
-
-  return String(attendees)
 }
 
 // Hjelpefunksjon for å hente ut deltakernavn fra hendelser
@@ -101,7 +75,6 @@ const getFamilyMemberColorsForDate = (date: Date, events: Event[]): string[] => 
 
 export default function FamilyCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  // 🔧 RETTELSE: Bruk useCurrentTime hook i stedet for useState
   const currentTime = useCurrentTime()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,7 +86,7 @@ export default function FamilyCalendarPage() {
   const [isDayEventsPopupOpen, setIsDayEventsPopupOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
 
-  // Bruk hjelpefunksjonene med den automatisk oppdaterte currentTime
+  // Filtrer hendelser basert på dagens og morgendagens dato
   const todaysEvents = events.filter(event =>
     timeUtils.isToday(event.date, currentTime)
   )
@@ -153,40 +126,20 @@ export default function FamilyCalendarPage() {
     fetchEvents()
   }, [])
 
-  const getEventTypeClass = (type: Event['type']) => {
-    const typeClasses: Record<Event['type'], string> = {
-      sports: 'event-blue',
-      school: 'event-green',
-      appointment: 'event-purple',
-      family: 'event-orange',
-      work: 'event-red',
-      annet: 'event-green'
-    }
-    return typeClasses[type]
+  // Navigation handlers
+  const handlePreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
   }
 
-  // Generer kalenderdatoer for gjeldende måned
-  const generateCalendarDates = () => {
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const startDate = new Date(firstDay)
-    startDate.setDate(startDate.getDate() - firstDay.getDay())
-
-    const dates = []
-    const currentCalendarDate = new Date(startDate)
-
-    for (let i = 0; i < 42; i++) {
-      dates.push(new Date(currentCalendarDate))
-      currentCalendarDate.setDate(currentCalendarDate.getDate() + 1)
-    }
-
-    return dates
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
   }
 
-  const calendarDates = generateCalendarDates()
+  const handleToday = () => {
+    setCurrentDate(new Date(currentTime))
+  }
 
-  // Håndter datoklikk
+  // Date click handler
   const handleDateClick = (date: Date) => {
     console.log('🎯 Dato klikket fra hovedkomponent:', {
       dato: date.toLocaleDateString('nb-NO'),
@@ -197,18 +150,22 @@ export default function FamilyCalendarPage() {
     setIsDayEventsPopupOpen(true)
   }
 
-  // Håndter legg til hendelse-knapp klikk
+  // Action handlers
   const handleAddEventClick = () => {
-    setSelectedDate(new Date(currentTime)) // Bruk den oppdaterte currentTime
+    setSelectedDate(new Date(currentTime))
     setIsAddPopupOpen(true)
   }
 
-  // Håndter se alle hendelser-knapp klikk
   const handleViewAllEventsClick = () => {
     setIsViewAllPopupOpen(true)
   }
 
-  // Håndter popup lukking
+  const handleFamilySettingsClick = () => {
+    // TODO: Implementer familieinnstillinger
+    alert('Familieinnstillinger kommer snart!')
+  }
+
+  // Popup close handlers
   const handleAddPopupClose = () => {
     setIsAddPopupOpen(false)
     setSelectedDate(undefined)
@@ -223,14 +180,13 @@ export default function FamilyCalendarPage() {
     setSelectedDate(undefined)
   }
 
-  // Håndter legg til hendelse fra dag popup
+  // Event change handlers
   const handleAddEventFromDayPopup = (date: Date) => {
     setIsDayEventsPopupOpen(false)
     setSelectedDate(date)
     setIsAddPopupOpen(true)
   }
 
-  // Håndter hendelse lagt til/endret
   const handleEventChanged = () => {
     fetchEvents() // Oppdater hendelsesliste
   }
@@ -238,157 +194,34 @@ export default function FamilyCalendarPage() {
   return (
     <div className="calendar-container">
       <div className="calendar-wrapper">
-        <header className="calendar-header">
-          <h1 className="calendar-title">
-            Familiekalender
-          </h1>
-          <p className="calendar-date">
-            {timeUtils.formatNorwegian(currentTime)} {/* Bruk timeUtils formatering */}
-          </p>
-        </header>
+        <CalendarHeader currentTime={currentTime} />
 
         <div className="calendar-grid">
-          {/* Dagens og morgendagens hendelser */}
-          <div className="events-card">
-            <h2 className="card-title">
-              Kommende hendelser
-            </h2>
+          <EventsPanel
+            todaysEvents={todaysEvents}
+            tomorrowsEvents={tomorrowsEvents}
+            loading={loading}
+            error={error}
+            onRetry={fetchEvents}
+          />
 
-            {/* Dagens hendelser-seksjon */}
-            <div className="events-section">
-              <h3 className="section-title">I dag</h3>
-              <div className="events-list">
-                {loading ? (
-                  <p className="event-details">Laster hendelser...</p>
-                ) : error ? (
-                  <div>
-                    <p className="event-details" style={{ color: 'red' }}>{error}</p>
-                    <button
-                      onClick={fetchEvents}
-                      className="nav-button nav-button-today"
-                      style={{ marginTop: '0.5rem' }}
-                    >
-                      Prøv igjen
-                    </button>
-                  </div>
-                ) : todaysEvents.length > 0 ? (
-                  todaysEvents.map(event => (
-                    <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
-                      <p className="event-title">{event.title}</p>
-                      <p className="event-details">
-                        {event.time}
-                        {renderAttendees(event.attendees) && ` - ${renderAttendees(event.attendees)}`}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="event-details">Ingen hendelser planlagt for i dag</p>
-                )}
-              </div>
-            </div>
-
-            {/* Morgendagens hendelser-seksjon */}
-            <div className="events-section">
-              <h3 className="section-title">I morgen</h3>
-              <div className="events-list">
-                {loading ? (
-                  <p className="event-details">Laster hendelser...</p>
-                ) : error ? (
-                  <p className="event-details" style={{ color: 'red' }}>Kan ikke laste hendelser</p>
-                ) : tomorrowsEvents.length > 0 ? (
-                  tomorrowsEvents.map(event => (
-                    <div key={event.id} className={`event-item ${getEventTypeClass(event.type)}`}>
-                      <p className="event-title">{event.title}</p>
-                      <p className="event-details">
-                        {event.time}
-                        {renderAttendees(event.attendees) && ` - ${renderAttendees(event.attendees)}`}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="event-details">Ingen hendelser planlagt for i morgen</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Kalenderrutenett */}
-          <div className="calendar-card">
-            <div className="calendar-nav">
-              <h2 className="card-title">
-                {currentDate.toLocaleDateString('nb-NO', { month: 'long', year: 'numeric' })}
-              </h2>
-              <div className="nav-buttons">
-                <button
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-                  className="nav-button nav-button-prev"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={() => setCurrentDate(new Date(currentTime))} // Bruk den oppdaterte currentTime
-                  className="nav-button nav-button-today"
-                >
-                  I dag
-                </button>
-                <button
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-                  className="nav-button nav-button-next"
-                >
-                  →
-                </button>
-              </div>
-            </div>
-
-            {/* Kalenderoverskrift */}
-            <div className="calendar-header-row">
-              {['Søn', 'Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør'].map(day => (
-                <div key={day} className="calendar-day-header">
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            <div className="calendar-dates">
-              {calendarDates.map((date, i) => {
-                const isCurrentMonth = date.getMonth() === currentDate.getMonth()
-                const isToday = timeUtils.isToday(date, currentTime) // Bruk timeUtils
-                const familyMemberColors = getFamilyMemberColorsForDate(date, events)
-
-                return (
-                  <CalendarDateCell
-                    key={i}
-                    date={date}
-                    isCurrentMonth={isCurrentMonth}
-                    isToday={isToday}
-                    events={events}
-                    familyMemberColors={familyMemberColors}
-                    onDateClick={handleDateClick}
-                  />
-                )
-              })}
-            </div>
-          </div>
+          <CalendarGrid
+            currentDate={currentDate}
+            currentTime={currentTime}
+            events={events}
+            onDateClick={handleDateClick}
+            onPreviousMonth={handlePreviousMonth}
+            onNextMonth={handleNextMonth}
+            onToday={handleToday}
+            getFamilyMemberColorsForDate={getFamilyMemberColorsForDate}
+          />
         </div>
 
-        {/* Hurtighandlinger */}
-        <div className="quick-actions">
-          <button
-            className="action-button button-blue"
-            onClick={handleAddEventClick}
-          >
-            Legg til hendelse
-          </button>
-          <button
-            className="action-button button-green"
-            onClick={handleViewAllEventsClick}
-          >
-            Se alle hendelser
-          </button>
-          <button className="action-button button-purple">
-            Familieinnstillinger
-          </button>
-        </div>
+        <QuickActions
+          onAddEvent={handleAddEventClick}
+          onViewAllEvents={handleViewAllEventsClick}
+          onFamilySettings={handleFamilySettingsClick}
+        />
       </div>
 
       {/* Popups */}
